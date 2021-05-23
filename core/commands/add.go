@@ -3,6 +3,7 @@ package commands
 import (
 	"errors"
 	"fmt"
+	"bufio"
 	"io"
 	"os"
 	"path"
@@ -161,6 +162,25 @@ only-hash, and progress/status related flags) will change the final hash.
 		return nil
 	},
 	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) error {
+
+		//fmt.Println("COMMAND add Run")
+
+		//fmt.Println("Request")
+		//fmt.Println(reflect.TypeOf(req))
+		//fmt.Println(reflect.TypeOf(req.Files))
+		//fmt.Println(req.Files)
+		//fmt.Println(req.Arguments)
+		//fmt.Println(req.Options)
+		//fmt.Println(req.Path)
+
+		// files.Directory
+		// 		DirIterator
+		//				DirEntry
+		//						Name
+		//						Node
+		//				Next()
+
+
 		api, err := cmdenv.GetApi(env, req)
 		if err != nil {
 			return err
@@ -193,6 +213,7 @@ only-hash, and progress/status related flags) will change the final hash.
 
 		toadd := req.Files
 		if wrap {
+			fmt.Println("wrap executed")
 			toadd = files.NewSliceDirectory([]files.DirEntry{
 				files.FileEntry("", req.Files),
 			})
@@ -229,10 +250,40 @@ only-hash, and progress/status related flags) will change the final hash.
 
 		opts = append(opts, nil) // events option placeholder
 
+
 		var added int
 		addit := toadd.Entries()
+
 		for addit.Next() {
-			_, dir := addit.Node().(files.Directory)
+			x, dir := addit.Node().(files.Directory)
+			fmt.Println("DIRECTORY ", x, dir)
+			//fmt.Print("FILE ")
+			//fmt.Println(addit.Node().(files.File))
+			fmt.Print("SIZE ")
+			fmt.Println(req.Files.Size())
+			file_path := addit.Name()
+			fmt.Println("PATH ", file_path)
+			if !dir {
+				file_end := file_path[len(file_path)-4:]
+				fmt.Println("FILE_END ", file_end)
+
+				if file_path[len(file_path)-4:] == ".zip"{
+					fmt.Print("Do you want to import an uncompressed .zip as Directory? [y],n : ")
+					reader := bufio.NewReader(os.Stdin)
+					char, _, err := reader.ReadRune()
+					if err != nil {
+					  fmt.Println(err)
+					}
+					if char == 'y' || char == 'Y' || char == 10{
+						fmt.Println("STARTING .zip investigation")
+					} else {
+						fmt.Println("CONTINUE without")
+					}
+				}
+			}
+
+
+
 			errCh := make(chan error, 1)
 			events := make(chan interface{}, adderOutChanSize)
 			opts[len(opts)-1] = options.Unixfs.Events(events)
