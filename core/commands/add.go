@@ -9,6 +9,9 @@ import (
 	"path"
 	"strings"
 
+
+	zip "github.com/nob404dy/go-zip-access"
+
 	"github.com/ipfs/go-ipfs/core/commands/cmdenv"
 
 	"github.com/cheggaaa/pb"
@@ -18,6 +21,18 @@ import (
 	"github.com/ipfs/interface-go-ipfs-core/options"
 	mh "github.com/multiformats/go-multihash"
 )
+
+// for getting memory address
+type address struct {
+	a uintptr
+}
+type this interface {
+	memory()
+}
+func (ad address) memory() {
+	fmt.Println("a - ", ad)
+	fmt.Println("a's memory address --> ", &ad)
+}
 
 // ErrDepthLimitExceeded indicates that the max depth has been exceeded.
 var ErrDepthLimitExceeded = fmt.Errorf("depth limit exceeded")
@@ -263,9 +278,13 @@ only-hash, and progress/status related flags) will change the final hash.
 			fmt.Println(req.Files.Size())
 			file_path := addit.Name()
 			fmt.Println("PATH ", file_path)
+
+
+			addit_ := addit.Node()
+			fmt.Println(addit_)
+			fmt.Println(addit)
+
 			if !dir {
-				file_end := file_path[len(file_path)-4:]
-				fmt.Println("FILE_END ", file_end)
 
 				if file_path[len(file_path)-4:] == ".zip"{
 					fmt.Print("Do you want to import an uncompressed .zip as Directory? [y],n : ")
@@ -276,6 +295,35 @@ only-hash, and progress/status related flags) will change the final hash.
 					}
 					if char == 'y' || char == 'Y' || char == 10{
 						fmt.Println("STARTING .zip investigation")
+						zip_directory := zip.Get_Directory(file_path)
+						file_name := file_path[:len(file_path)-4]
+						for i := range zip_directory{
+							zip_directory[i] = file_name + "/" + zip_directory[i]
+						}
+						//fmt.Println(zip_directory)
+						fmt.Println("CONVERT command to Directory")
+
+						//x, dir := addit_.(files.Directory)
+						fmt.Println("DIRECTORY old: ", addit_)
+						// build new Node
+						type Custom_Node struct {
+							path string
+							folder []uint64
+							x uint64
+							y uint64
+						}
+						// get memory address
+						ad := 43
+						fmt.Println(ad, " memory address --> ", &ad)
+
+
+						// CREATE NEW NODE
+						fmt.Println("DIRECTORY new: ", &Custom_Node{path: file_name, folder: []uint64{40,20}, x: 10, y:15 })
+
+						fmt.Println("DIRECTORY need: &{library_tiny [0xc0001231e0] 0xc000122ea0 0xc0009067a0}")
+
+
+
 					} else {
 						fmt.Println("CONTINUE without")
 					}
@@ -291,7 +339,7 @@ only-hash, and progress/status related flags) will change the final hash.
 			go func() {
 				var err error
 				defer close(events)
-				_, err = api.Unixfs().Add(req.Context, addit.Node(), opts...)
+				_, err = api.Unixfs().Add(req.Context, addit_, opts...)
 				errCh <- err
 			}()
 
