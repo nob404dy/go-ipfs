@@ -22,17 +22,7 @@ import (
 	mh "github.com/multiformats/go-multihash"
 )
 
-// for getting memory address
-type address struct {
-	a uintptr
-}
-type this interface {
-	memory()
-}
-func (ad address) memory() {
-	fmt.Println("a - ", ad)
-	fmt.Println("a's memory address --> ", &ad)
-}
+
 
 // ErrDepthLimitExceeded indicates that the max depth has been exceeded.
 var ErrDepthLimitExceeded = fmt.Errorf("depth limit exceeded")
@@ -312,7 +302,7 @@ only-hash, and progress/status related flags) will change the final hash.
 							x uint64
 							y uint64
 						}
-						// get memory address
+						// get memory address example
 						ad := 43
 						fmt.Println(ad, " memory address --> ", &ad)
 
